@@ -1,4 +1,5 @@
 """Create a ConversationalRetrievalChain for question/answering."""
+import sys
 import chromadb
 from langchain.callbacks.base import AsyncCallbackManager
 from langchain.callbacks.tracers import LangChainTracer
@@ -63,7 +64,7 @@ def get_chain(
         streaming_llm,
         chain_type="stuff",
         prompt=QA_PROMPT,  # , callback_manager=manager
-        verbose=True,
+        verbose=False,
     )
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=False)
 

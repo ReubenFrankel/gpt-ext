@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import sys
 from typing import Any
 
 import typer
@@ -45,7 +46,7 @@ class GPTExt(ExtensionBase):
     @staticmethod
     def chat(
         ctx: typer.Context,
-        question: str = typer.Option(..., prompt="What is your question?"),
+        questions: str = typer.Option(..., prompt="What is your question?"),
     ) -> None:
         """Invoke the plugin.
 
@@ -61,23 +62,22 @@ class GPTExt(ExtensionBase):
             return result
 
         async def stream_handler(text):
-            print("Stream:", text)
+            print("Stream:", text, file=sys.stderr)
 
-        print("Hello World!")
         qa = get_chain(
             app.vectorstore,
             question_handler=question_handler,
             stream_handler=stream_handler,
         )
-        chat_history = []
-        while True:
-            result = qa({"question": question})
-            print("---------------")
-            print(f"Q: {result['question']}")
-            print("---------------")
-            print(result["answer"])
-            print("---------------")
-            print(chat_history)
-            print("---------------")
-            return  # Question history not working yet
-            question = typer.prompt("Next question")
+            
+        answers = []
+        if len(questions) > 0:
+            for question in questions.split(","):
+                if "?" in question:
+                    result = qa({"question": question})
+                    answers.append(result["answer"])
+                else:
+                    answers.append(question)
+
+        csv_string = ",".join(str(i) for i in answers)
+        print(csv_string)
