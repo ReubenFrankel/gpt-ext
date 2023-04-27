@@ -12,6 +12,7 @@ from langchain.llms import OpenAI
 from langchain.memory import ConversationBufferMemory
 from langchain.vectorstores import Chroma
 from langchain.vectorstores.base import VectorStore
+from langchain.chains import RetrievalQA
 
 
 def load_chroma_vectorstore(chroma_dir) -> Chroma:
@@ -58,7 +59,7 @@ def get_chain(
     question_generator = LLMChain(
         llm=question_gen_llm,
         prompt=CONDENSE_QUESTION_PROMPT,  # , callback_manager=manager
-        verbose=True,
+        verbose=False,
     )
     doc_chain = load_qa_chain(
         streaming_llm,
@@ -66,10 +67,10 @@ def get_chain(
         prompt=QA_PROMPT,  # , callback_manager=manager
         verbose=False,
     )
-    memory = ConversationBufferMemory(memory_key="chat_history", return_messages=False)
+#    memory = ConversationBufferMemory(memory_key="chat_history", return_messages=False)
 
     qa = ConversationalRetrievalChain(
-        memory=memory,
+#        memory=memory,
         retriever=vectorstore.as_retriever(),
         combine_docs_chain=doc_chain,
         question_generator=question_generator,

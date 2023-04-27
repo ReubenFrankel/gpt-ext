@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import os
 import sys
+import csv
 from typing import Any
 
 import typer
@@ -71,13 +72,20 @@ class GPTExt(ExtensionBase):
         )
             
         answers = []
+        chat_history = []
         if len(questions) > 0:
             for question in questions.split(","):
                 if "?" in question:
-                    result = qa({"question": question})
-                    answers.append(result["answer"])
+                    #result = qa({"question": question})
+                    result = qa({"question": question, "chat_history": chat_history})
+                    chat_history.append((question, result["answer"]))
+                    answers.append(result["answer"].strip())
                 else:
                     answers.append(question)
 
-        csv_string = ",".join(str(i) for i in answers)
-        print(csv_string)
+        csv_writer = csv.writer(sys.stdout)
+#        csv_writer.writerow(questions)
+        csv_writer.writerow(answers)
+
+        # csv_string = ",".join(str(i) for i in answers)
+        # print(csv_string)
