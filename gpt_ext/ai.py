@@ -71,7 +71,8 @@ def get_chain(
 
     qa = ConversationalRetrievalChain(
 #        memory=memory,
-        retriever=vectorstore.as_retriever(search_kwargs={"k": 1}),
+#        retriever=vectorstore.as_retriever(search_kwargs={"k": 1}),
+        retriever=vectorstore.as_retriever(),
         combine_docs_chain=doc_chain,
         question_generator=question_generator,
         # callback_manager=manager,
