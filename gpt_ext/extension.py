@@ -4,6 +4,7 @@ from __future__ import annotations
 import os
 import sys
 import csv
+import pprint
 from typing import Any
 
 import typer
@@ -14,7 +15,6 @@ from gpt_ext.edk_fixes.extension_base import CLI, ExtensionBase
 DEFAULT_SETTING_VALS = {
     "chroma_dir": os.path.join(os.path.expanduser("~"), ".chroma"),
 }
-
 
 class GPTExt(ExtensionBase):
     """Extension implementing the ExtensionBase interface."""
@@ -57,13 +57,14 @@ class GPTExt(ExtensionBase):
         """
         app: OpenAI = ctx.obj
 
-        async def question_handler(text):
+        def question_handler(text):
             print("Question:", text)
             result = typer.prompt("???")
             return result
 
-        async def stream_handler(text):
+        def stream_handler(text):
             print("Stream:", text, file=sys.stderr)
+       
 
         qa = get_chain(
             app.vectorstore,
@@ -78,6 +79,14 @@ class GPTExt(ExtensionBase):
                 if "?" in question:
                     #result = qa({"question": question})
                     result = qa({"question": question, "chat_history": chat_history})
+                    pprint.pprint(result)
+                    docs_and_similarities = (
+                        app.vectorstore.similarity_search_with_relevance_scores(question)
+                    )
+                    for doc in docs_and_similarities:
+                        print(doc[1])
+                    #docs = [doc for doc, _ in docs_and_similarities]
+
                     chat_history.append((question, result["answer"]))
                     answers.append(result["answer"].strip())
                 else:

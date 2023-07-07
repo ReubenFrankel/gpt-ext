@@ -1,8 +1,8 @@
 """Create a ConversationalRetrievalChain for question/answering."""
-import sys
+#import sys
 import chromadb
-from langchain.callbacks.base import AsyncCallbackManager
-from langchain.callbacks.tracers import LangChainTracer
+from langchain.callbacks.base import BaseCallbackHandler
+#from langchain.callbacks.tracers import LangChainTracer
 from langchain.chains import ConversationalRetrievalChain
 from langchain.chains.chat_vector_db.prompts import CONDENSE_QUESTION_PROMPT, QA_PROMPT
 from langchain.chains.llm import LLMChain
@@ -12,8 +12,14 @@ from langchain.llms import OpenAI
 from langchain.memory import ConversationBufferMemory
 from langchain.vectorstores import Chroma
 from langchain.vectorstores.base import VectorStore
-from langchain.chains import RetrievalQA
+#from langchain.chains import RetrievalQA
 
+class MyCustomSyncHandler(BaseCallbackHandler):
+    def __init__(self, mycallbackfunc):
+        self.myfunc = mycallbackfunc
+    def on_llm_new_token(self, token: str, **kwargs) -> None:
+        self.myfunc(token)
+        print(f"Sync handler being called in a `thread_pool_executor`: token: {token}")
 
 def load_chroma_vectorstore(chroma_dir) -> Chroma:
     """Load the Chroma vectorstore."""
@@ -34,24 +40,24 @@ def get_chain(
     """Create a ConversationalRetrievalChain for question/answering."""
     # Construct a ConversationalRetrievalChain with a streaming llm for combine docs
     # and a separate, non-streaming llm for question generation
-    manager = AsyncCallbackManager([])
-    question_manager = AsyncCallbackManager([question_handler])
-    stream_manager = AsyncCallbackManager([stream_handler])
-    if tracing:
-        tracer = LangChainTracer()
-        tracer.load_default_session()
-        manager.add_handler(tracer)
-        question_manager.add_handler(tracer)
-        stream_manager.add_handler(tracer)
+    #manager = AsyncCallbackHandler([])
+    question_callbacks = [MyCustomSyncHandler(question_handler)]
+    stream_callbacks = [MyCustomSyncHandler(stream_handler)]
+    # if tracing:
+    #     tracer = LangChainTracer()
+    #     tracer.load_default_session()
+    #     manager.add_handler(tracer)
+    #     question_manager.add_handler(tracer)
+    #     stream_manager.add_handler(tracer)
 
     question_gen_llm = OpenAI(
         temperature=0,
         verbose=True,
-        callback_manager=question_manager,
+        callbacks=question_callbacks,
     )
     streaming_llm = OpenAI(
         streaming=True,
-        callback_manager=stream_manager,
+        callbacks=stream_callbacks,
         verbose=True,
         temperature=0,
     )
@@ -72,7 +78,8 @@ def get_chain(
     qa = ConversationalRetrievalChain(
 #        memory=memory,
 #        retriever=vectorstore.as_retriever(search_kwargs={"k": 1}),
-        retriever=vectorstore.as_retriever(),
+        retriever=vectorstore.as_retriever(search_type="similarity_score_threshold", search_kwargs={"score_threshold": 0.1}),
+#        retriever=vectorstore.as_retriever(),
         combine_docs_chain=doc_chain,
         question_generator=question_generator,
         # callback_manager=manager,
