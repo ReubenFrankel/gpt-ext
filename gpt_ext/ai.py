@@ -1,5 +1,5 @@
 """Create a ConversationalRetrievalChain for question/answering."""
-#import sys
+import sys
 import chromadb
 from langchain.callbacks.base import BaseCallbackHandler
 #from langchain.callbacks.tracers import LangChainTracer
@@ -19,7 +19,7 @@ class MyCustomSyncHandler(BaseCallbackHandler):
         self.myfunc = mycallbackfunc
     def on_llm_new_token(self, token: str, **kwargs) -> None:
         self.myfunc(token)
-        print(f"Sync handler being called in a `thread_pool_executor`: token: {token}")
+        print(f"Sync handler being called in a `thread_pool_executor`: token: {token}", file=sys.stderr)
 
 def load_chroma_vectorstore(chroma_dir) -> Chroma:
     """Load the Chroma vectorstore."""

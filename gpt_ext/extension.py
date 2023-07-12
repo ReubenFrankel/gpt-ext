@@ -1,6 +1,7 @@
 """Meltano OpenAI extension."""
 from __future__ import annotations
 
+import json
 import os
 import sys
 import csv
@@ -79,16 +80,18 @@ class GPTExt(ExtensionBase):
                 if "?" in question:
                     #result = qa({"question": question})
                     result = qa({"question": question, "chat_history": chat_history})
-                    pprint.pprint(result)
+                    # pprint.pprint(result)
                     docs_and_similarities = (
                         app.vectorstore.similarity_search_with_relevance_scores(question)
                     )
-                    for doc in docs_and_similarities:
-                        print(doc[1])
-                    #docs = [doc for doc, _ in docs_and_similarities]
+                    context = [{
+                        "page_content": doc.page_content,
+                        "similarity": similarity,
+                    } for doc, similarity in docs_and_similarities]
 
                     chat_history.append((question, result["answer"]))
                     answers.append(result["answer"].strip())
+                    answers.append(json.dumps(context))
                 else:
                     answers.append(question)
 
