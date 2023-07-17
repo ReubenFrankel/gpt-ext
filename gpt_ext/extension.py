@@ -77,6 +77,8 @@ class GPTExt(ExtensionBase):
         chat_history = []
         if len(questions) > 0:
             for question in questions.split(","):
+                answers.append(question)
+
                 if "?" in question:
                     #result = qa({"question": question})
                     result = qa({"question": question, "chat_history": chat_history})
@@ -92,8 +94,6 @@ class GPTExt(ExtensionBase):
                     chat_history.append((question, result["answer"]))
                     answers.append(result["answer"].strip())
                     answers.append(json.dumps(context))
-                else:
-                    answers.append(question)
 
         csv_writer = csv.writer(sys.stdout)
 #        csv_writer.writerow(questions)
